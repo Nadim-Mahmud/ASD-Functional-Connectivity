@@ -1,0 +1,3 @@
+  python download_abide_preproc.py -d func_preproc -p dparsf -s nofilt_global -o 'preprocessed'
+                                     [-lt <less_than>] [-gt <greater_than>]
+                                     [-x <sex>] [-t <site>]
