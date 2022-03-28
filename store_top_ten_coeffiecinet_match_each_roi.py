@@ -76,8 +76,13 @@ def single_patient_all_control(patient_path, patient_id):
 	# create every path if not exists
 
 	roi_name = patient_path.split('-', 1)[1]
-	#print(roi_name)
 	roi_path = TMP_ROI + roi_name[0:-4]
+
+	# return if already exists
+	final_output = roi_path + '/' + patient_id + ".csv"
+	if(os.path.exists(final_output)):
+		print('Already computed !')
+		return
 
 	if(not(os.path.exists(roi_path))):
 		os.mkdir(roi_path)
@@ -141,18 +146,23 @@ def single_patient_all_control(patient_path, patient_id):
 
 # all patients angular 
 
-cnt = 0
-start = 0
-end = 0
+roi_file = open('roi.txt', 'r')
+for roi in roi_file:
+	roi = roi.strip()
+	print('ROI : {} ------------------------------------------------------------------------'.format(roi[:-4]))
+	
+	cnt = 0
+	start = 0
+	end = 0
 
-for pat in os.listdir(PATIENT):
-	path = PATIENT + pat + '/' + pat + '-LateralOccipitalCortex-superiordivision.csv'
-	cnt += 1
-	dt = end - start
-	total = datetime.timedelta(seconds = (dt * (50 - cnt)))
-	dt = datetime.timedelta(seconds = dt)
-	print('{}/50 patient {}            SPT: {} | EST: {}'.format(cnt, pat, dt, total))
-	start = time.time()
-	single_patient_all_control(path, pat)
-	end = time.time()
+	for pat in os.listdir(PATIENT):
+		path = PATIENT + pat + '/' + pat + '-' + roi
+		cnt += 1
+		dt = end - start
+		total = datetime.timedelta(seconds = (dt * (50 - cnt)))
+		dt = datetime.timedelta(seconds = dt)
+		print('{}/50 ROI : {}            SPT: {} | EST: {}'.format(cnt, roi[:-4], dt, total))
+		start = time.time()
+		single_patient_all_control(path, pat)
+		end = time.time()
 
