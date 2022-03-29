@@ -4,8 +4,28 @@ import matplotlib.pyplot as plt
 import os
 import time
 import datetime
+import sys
+
+# catching warnings 
+import warnings
+warnings.filterwarnings("error")
 
 
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open("logfile.log", "a")
+   
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)  
+
+    def flush(self):
+        # this flush method is needed for python 3 compatibility.
+        # this handles the flush command by doing nothing.
+        # you might want to specify some extra behavior here.
+        pass    
+sys.stdout = Logger()
 
 # progress bar
 def progress_bar(current, total, bar_length=20, progress='progress'):
@@ -37,6 +57,7 @@ def calculate_coef(patient, control, control_count_dct):
 	cols_range = 150	
 	cnt = 0
 	cn = 0
+	coef = 0
 	cols = ['id','x', 'y', 'z'] + list(range(1, cols_range+1))
 
 	data1 = patient.to_numpy()
@@ -44,7 +65,11 @@ def calculate_coef(patient, control, control_count_dct):
 
 	for signal1, signal2 in zip(data1, data2):
 		
-		coef = np.corrcoef(signal1[4:cols_range], signal2[4:cols_range])[0, 1]
+		try:
+			coef = np.corrcoef(signal1[4:cols_range], signal2[4:cols_range])[0, 1]
+		except Exception as error:
+			print('Error from cathed: {} {}'.format(coef, error))
+			continue
 		
 		if(not(signal1[0] in control_count_dct)):
 			control_count_dct[signal1[0]] = 0
@@ -71,10 +96,9 @@ PATIENT = 'D:/Project/Data/RoiSignal/patient/'
 TMP_ROI = 'D:/Project/Data/Practice/top_ten_match/'
 
 
-# calculate and store all patinetns a roi to this specifif roi and store top then disimilaties
+# calculate and store a single patients roi to this specific roi of controls and store top then disimilaties
 def single_patient_all_control(patient_path, patient_id):
-	# create every path if not exists
-
+	
 	roi_name = patient_path.split('-', 1)[1]
 	roi_path = TMP_ROI + roi_name[0:-4]
 
@@ -83,7 +107,8 @@ def single_patient_all_control(patient_path, patient_id):
 	if(os.path.exists(final_output)):
 		print('Already computed !')
 		return
-
+	
+	#create a path if not exists
 	if(not(os.path.exists(roi_path))):
 		os.mkdir(roi_path)
 
@@ -100,9 +125,6 @@ def single_patient_all_control(patient_path, patient_id):
 		
 		#print('{}/43 coefficient of {}  with {} for - {}'.format(cnt, patient_id, contr, roi_name))
 		progress_bar(cnt, 43, 70, 'Patient - ' + patient_id)
-
-		# if(cnt > 5):
-		#  	break
 
 		contorl = pd.read_csv(control_roi, sep=' ', names=cols)
 		control_count_dct = calculate_coef(patient, contorl, control_count_dct)
@@ -146,11 +168,21 @@ def single_patient_all_control(patient_path, patient_id):
 
 # all patients angular 
 
+
+skip_roi = ['JuxtapositionalLobuleCortex-formerlySupplementaryMotorCortex', 
+'LateralOccipitalCortex-inferiordivision', 'LateralOccipitalCortex-superiordivision']
+
 roi_file = open('roi.txt', 'r')
 for roi in roi_file:
+	
 	roi = roi.strip()
 	print('ROI : {} ------------------------------------------------------------------------'.format(roi[:-4]))
 	
+	if(roi[:-4] in skip_roi):
+		print('skipped')
+		continue
+
+
 	cnt = 0
 	start = 0
 	end = 0
