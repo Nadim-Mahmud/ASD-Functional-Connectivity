@@ -17,8 +17,10 @@ class Logger(object):
         self.log = open("logfile.log", "a")
    
     def write(self, message):
+        now = datetime.datetime.now()
+        now_string = now.strftime("%d-%m-%Y %H:%M:%S")
         self.terminal.write(message)
-        self.log.write(message)  
+        self.log.write(now_string + ' ' + message)  
 
     def flush(self):
         # this flush method is needed for python 3 compatibility.
@@ -46,7 +48,7 @@ def add_id(df):
 	return df
 
 # returns a dictinary after adding new inside voxel count to the dictionary
-def calculate_coef(patient, control, control_count_dct):
+def calculate_coef(patient, control, control_count_dct, roi_name, patient_id):
 
 	if(not('id' in patient)):
 		patient = add_id(patient)
@@ -60,6 +62,8 @@ def calculate_coef(patient, control, control_count_dct):
 	coef = 0
 	cols = ['id','x', 'y', 'z'] + list(range(1, cols_range+1))
 
+	roi_log = open('problematice_roi.log','a')
+
 	data1 = patient.to_numpy()
 	data2 = control.to_numpy()
 
@@ -68,7 +72,8 @@ def calculate_coef(patient, control, control_count_dct):
 		try:
 			coef = np.corrcoef(signal1[4:cols_range], signal2[4:cols_range])[0, 1]
 		except Exception as error:
-			print('Error from cathed: {} {}'.format(coef, error))
+			print('ROI: {} Error {}'.format(roi_name, error))
+			roi_log.write(roi_name + '-' + patient_id + '\n')
 			continue
 		
 		if(not(signal1[0] in control_count_dct)):
@@ -80,6 +85,7 @@ def calculate_coef(patient, control, control_count_dct):
 		else:
 			cn = cn + 1
 
+	roi_log.close()
 	#print('Indside range : {} Outside range {}\n'.format(cnt, cn))
 
 	return control_count_dct
@@ -127,7 +133,7 @@ def single_patient_all_control(patient_path, patient_id):
 		progress_bar(cnt, 43, 70, 'Patient - ' + patient_id)
 
 		contorl = pd.read_csv(control_roi, sep=' ', names=cols)
-		control_count_dct = calculate_coef(patient, contorl, control_count_dct)
+		control_count_dct = calculate_coef(patient, contorl, control_count_dct, roi_name[:-4], patient_id)
 	
 	control_count_list = []
 	for key in control_count_dct:
@@ -170,7 +176,7 @@ def single_patient_all_control(patient_path, patient_id):
 
 
 skip_roi = ['JuxtapositionalLobuleCortex-formerlySupplementaryMotorCortex', 
-'LateralOccipitalCortex-inferiordivision', 'LateralOccipitalCortex-superiordivision']
+'LateralOccipitalCortex-inferiordivision', 'LateralOccipitalCortex-superiordivision', 'LingualGyrus']
 
 roi_file = open('roi.txt', 'r')
 for roi in roi_file:
@@ -178,9 +184,9 @@ for roi in roi_file:
 	roi = roi.strip()
 	print('ROI : {} ------------------------------------------------------------------------'.format(roi[:-4]))
 	
-	if(roi[:-4] in skip_roi):
-		print('skipped')
-		continue
+	# if(roi[:-4] in skip_roi):
+	# 	print('skipped')
+	# 	continue
 
 
 	cnt = 0
