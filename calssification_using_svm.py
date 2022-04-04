@@ -38,7 +38,7 @@ def svm_on_roi(roi_name, result_list):
 
 
 
-    clf = svm.SVC(kernel='linear') # Linear Kernel
+    clf = svm.SVC(kernel='poly') # Linear Kernel
     clf.fit(X_train, y_train)
 
     #Predict the response for test dataset
@@ -73,5 +73,5 @@ for roi in os.listdir(INPUT_PATH):
 
 cols = ['roi_name', 'accuracy', 'precision', 'recall']
 out_result = pd.DataFrame(result_list, columns = cols)
-file_name = 'each_roi_accuracy.csv'
+file_name = 'each_roi_accuracy_polynomial.csv'
 out_result.to_csv(file_name, encoding='utf-8', index=False)
