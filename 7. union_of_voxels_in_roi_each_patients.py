@@ -1,6 +1,9 @@
 import pandas as pd
 import os
 
+
+# Stores cordinate which voxels remains after unions
+
 PATH = r'D:/Project/Data/Practice/top_ten_match/'
 OUT = "D:/Project/Data/Practice/roi_voxels/"
 
