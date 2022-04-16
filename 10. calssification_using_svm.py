@@ -3,6 +3,8 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn import svm
 from sklearn import metrics
+import random
+import numpy as np
 
 INPUT_PATH = 'D:/Project/Data/RoiSignal/time_series_after_flatening/'
 META_PATH = 'D:/Project/Data/RoiSignal/subjects_meta.csv'
@@ -17,6 +19,8 @@ def svm_on_roi(roi_name, result_list):
     roi_path = INPUT_PATH + roi_name
     roi_data = pd.read_csv(roi_path)
     roi_data = roi_data.values
+
+    np.random.shuffle(roi_data)
 
     # print(roi_data)
 
@@ -34,11 +38,11 @@ def svm_on_roi(roi_name, result_list):
     # print(data)
 
     # train test split
-    X_train, X_test, y_train, y_test = train_test_split(data, catagories, test_size=0.2,random_state=109)
+    X_train, X_test, y_train, y_test = train_test_split(data, catagories, test_size=0.15,random_state=109)
 
 
 
-    clf = svm.SVC(kernel='poly') # Linear Kernel
+    clf = svm.SVC(kernel='linear') # Linear Kernel
     clf.fit(X_train, y_train)
 
     #Predict the response for test dataset
@@ -73,5 +77,5 @@ for roi in os.listdir(INPUT_PATH):
 
 cols = ['roi_name', 'accuracy', 'precision', 'recall']
 out_result = pd.DataFrame(result_list, columns = cols)
-file_name = 'each_roi_accuracy_polynomial.csv'
+file_name = 'each_roi_accuracy_linear.csv'
 out_result.to_csv(file_name, encoding='utf-8', index=False)
